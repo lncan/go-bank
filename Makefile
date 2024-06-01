@@ -1,4 +1,19 @@
-DOCKER-COMPOSE=docker-compoes -f docker-compose.yaml
+DOCKER-COMPOSE=docker-compose -f docker-compose.yaml
 
-docker-compose-up:
+up:
 	$(DOCKER-COMPOSE) up -d	
+
+down:
+	$(DOCKER-COMPOSE) down 
+
+down-volumes:
+	$(DOCKER-COMPOSE) down -v
+
+	
+clean: down-volumes
+	docker system prune --volumes -f
+	
+logs:
+	$(DOCKER-COMPOSE) logs -t -f
+
+.PHONY: up down down-volumes logs clean

@@ -1,18 +1,35 @@
-version: '3.9'
+version: '3'
 
 services:
   db:
-    image: postgres:16
+    image: postgres
     container_name: postgres 
     restart: always
-    environment:
-      POSTGRES_PASSWORD: postgres 
-      POSTGRES_USER: postgres
-      POSTGRES_DB: go-bank
-  ports:
+    env_file:
+      - .env
+    ports:
       - 5432:5432
-  volumes:
-    - postgres:/var/lib/postgresql/data
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  migrate:
+    image: migrate/migrate
+    volumes:
+      - ./db/migration:/database
+    depends_on:
+      db:
+        condition: service_healthy
+    links:
+      - db 
+    env_file:
+      - .env
+    command:
+      ["-path", "/database", "-database", "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB?sslmode=disable", "up"]
 
 volumes:
-  - postgres
+  postgres:
